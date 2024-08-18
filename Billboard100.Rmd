@@ -1,0 +1,81 @@
+---
+title: "Billboard100"
+author: "Jason Antal"
+date: "2024-08-18"
+output: pdf_document
+---
+
+```{r setup, include=FALSE #CHANGE FILEPATH AND RUN THIS BEFORE RUNNING BELOW} 
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(readr)
+setwd("c:/Users/jason/downloads") #CHANGE FILEPATH HERE
+billboard <- read_csv("billboard.csv") 
+```
+Part A: Make a table of the top 10 most popular songs since 1958, as measured by the total number of weeks that a song spent on the Billboard Top 100 chart since 1958, up through the middle of 2021.Your table should have 10 rows and 3 columns: performer, song, and count, where count represents the number of weeks that song appeared in the Billboard Top 100. Make sure the entries are sorted in descending order of the count variable, so that the more popular songs appear at the top of the table. Give your table a short caption describing what is shown in the table.
+
+```{r Part A}
+top_10_songs <- billboard %>%
+  group_by(performer, song) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  arrange(desc(count)) %>%
+  head(10)
+
+print("The top 10 Most Popular Songs on the Billboard Hot 100 (Jan 1958- May 2021), ranked by total number of weeks on the chart:")
+print(top_10_songs)
+
+```
+Part B: Is the "musical diversity" of the Billboard Top 100 changing over time? Let's find out. We'll measure the musical diversity of given year as the number of unique songs that appeared in the Billboard Top 100 that year. Make a line graph that plots this measure of musical diversity over the years. The x axis should show the year, while the y axis should show the number of unique songs appearing at any position on the Billboard Top 100 chart in any week that year. 
+For this part, please filter the data set so that it excludes the years 1958 and 2021, since we do not have complete data on either of those years. Give the figure an informative caption in which you explain what is shown in the figure and comment on any interesting trends you see.
+
+There are number of ways to accomplish the data wrangling here. For example, you could use two distinct sets of data-wrangling steps. The first set of steps would get you a table that counts the number of times that a given song appears on the Top 100 in a given year. The second set of steps operate on the result of the first set of steps; it would count the number of unique songs that appeared on the Top 100 in each year, irrespective of how many times it had appeared.
+
+```{r Part B}
+#How many unique songs appeared in the Billboard 100 every year from '59-'20?
+
+musical_diversity <- billboard %>%
+  filter(year > 1958 & year < 2021) %>% 
+  distinct(year, song, performer) %>%    
+  group_by(year) %>%
+  summarise(unique_songs = n(), .groups = "drop")
+
+# Create the line graph
+ggplot(musical_diversity, aes(x = year, y = unique_songs)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Musical Diversity of Billboard Top 100 (1959-2020)",
+    x = "Year",
+    y = "Number of Unique Songs",
+    caption = "A graph showing the number of unique songs from 1959-2020. At the beginning of this chart, we can see that musical 
+    diversity in the billboard 100 was at an all-time high in the 1960's, with over 800 unique songs from 1964-1967. Musical 
+    diversity then fell every year afterwards almost without exception, reaching its lowest point in 2001 at less than 400
+    unique songs. We then experienced a sharp rise in unique songs in the mid-late 2000's, a sharp fall in 2012, and
+    another dramatic rise from 2015-2020 that ended with 2020 breaking the 800-unique-songs barrier again."
+  )
+
+```
+
+Part C: Let's define a "ten-week hit" as a single song that appeared on the Billboard Top 100 for at least ten weeks. There are 19 artists in U.S. musical history since 1958 who have had at least 30 songs that were "ten-week hits." Make a bar plot for these 19 artists, showing how many ten-week hits each one had in their musical career. Give the plot an informative caption in which you explain what is shown.
+
+```{r Part C}
+ten_week_hits <- billboard %>%
+  group_by(performer, song) %>%
+  summarise(weeks_on_chart = n(), .groups = "drop") %>%
+  filter(weeks_on_chart >= 10) %>%
+  group_by(performer) %>%
+  summarise(ten_week_hits = n()) %>%
+  filter(ten_week_hits >= 30)
+
+ggplot(ten_week_hits, aes(x = reorder(performer, ten_week_hits), y = ten_week_hits)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +  # Flip coordinates for horizontal bars
+  labs(
+    title = "Artists with 30 or More Ten-Week Hits on Billboard Top 100 (1958-2021)",
+    x = "Artist",
+    y = "Number of Ten-Week Hits",
+    caption = 'placeholder')
+```
+
+
