@@ -1,0 +1,36 @@
+---
+title: "ImageClassification"
+author: "Jason Antal"
+date: "2024-08-18"
+output: pdf_document
+---
+
+```{r setup, include=FALSE #CHANGE FILEPATH AND RUN THIS BEFORE RUNNING BELOW}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(readr)
+setwd("c:/Users/jason/downloads") #CHANGE FILEPATH HERE
+social_marketing <- read_csv("social_marketing")
+```
+
+In this problem, you will train a neural network to classify satellite images. In the data/EuroSAT_RGB directory, you will find 11 subdirectories, each corresponding to a different class of land or land use: e.g. industrial, crops, rivers, forest, etc. Within each subdirectory, you will find examples in .jpg format of each type. (Thus the name of the directory in which the image lives is the class label.)
+
+Your job is to set up a neural network that can classify the images as accurately as possible. Use an 80/20 train test split. Summarize your model and its accuracy in any way you see fit, but make you include at a minimum the following elements:
+
+    overall test-set accuracy, measured however you think is appropriate
+    show some of the example images from the test set, together with your model's predicted classes.
+    a confusion matrix showing the performance of the model on the set test, i.e. a table that cross-tabulates each test set example by (actual class, predicted class).
+
+I strongly recommend the use of PyTorch in a Jupyter notebook for this problem; look into PyTorch's ImageFolder data set class, which will streamline things considerably.
+
+```{r cars}
+
+```
+
+
+
+```{r pressure, echo=FALSE}
+
+```
+

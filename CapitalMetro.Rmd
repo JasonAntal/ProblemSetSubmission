@@ -1,0 +1,76 @@
+---
+title: "CapitalMetro"
+author: "Jason Antal"
+date: "2024-08-18"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(readr)
+setwd("c:/Users/jason/downloads")
+capmetro_data <- read_csv("capmetro_UT.csv")
+```
+
+The file capmetro_UT.csv contains data from Austin's own Capital Metro bus network, including shuttles to, from, and around the UT campus. These data track ridership on buses in the UT area. Ridership is measured by an optical scanner that counts how many people embark and alight the bus at each stop. Each row in the data set corresponds to a 15-minute period between the hours of 6 AM and 10 PM, each and every day, from September through November 2018. The variables are:
+
+    timestamp: the beginning of the 15-minute window for that row of data
+    boarding: how many people got on board any Capital Metro bus on the UT campus in the specific 15 minute window
+    alighting: how many people got off ("alit") any Capital Metro bus on the UT campus in the specific 15 minute window
+    day_of_week and weekend: Monday, Tuesday, etc, as well as an indicator for whether it's a weekend.
+    temperature: temperature at that time in degrees F
+    hour_of_day: on 24-hour time, so 6 for 6 AM, 13 for 1 PM, 14 for 2 PM, etc.
+    month: July through December
+
+Your task is to create a figure, or set of related figures, that tell an interesting story about Capital Metro ridership patterns around the UT-Austin campus during the semester in question. Provide a clear annotation/caption for each figure, but the figure(s) should be more or less stand-alone, in that you shouldn't need many, many paragraphs to convey its meaning. Rather, the figure together with a concise caption should speak for itself as far as possible.
+
+You have broad freedom to look at any variables you'd like here -- try to find that sweet spot where you're showing genuinely interesting relationships among more than just two variables, but where the resulting figure or set of figures doesn't become overwhelming/confusing. (Faceting/panel plots might be especially useful here.)
+
+```{r pairwise analysis of all data to see relationships}
+
+pairwise_analysis <- function(data) {
+  variables <- c("alighting", "temperature", "hour_of_day", "day_of_week", "weekend", "month")
+  
+  # Loop through each variable
+  for (var in variables) {
+    cat("\nAnalyzing:", var, "\n")
+    
+    if (is.numeric(data[[var]])) {
+      correlation <- cor(data$boarding, data[[var]], use = "complete.obs")
+      cat("Correlation with boarding:", round(correlation, 3), "\n")
+      
+      plot(data[[var]], data$boarding, 
+           main = paste("Boarding vs", var),
+           xlab = var, ylab = "Boarding",
+           pch = 20, col = "blue")
+    } else {
+      # For categorical variables, create a boxplot
+      boxplot(boarding ~ data[[var]], data = data,
+              main = paste("Boarding by", var),
+              xlab = var, ylab = "Boarding")
+      
+      # Perform ANOVA
+      anova_result <- summary(aov(boarding ~ data[[var]], data = data))
+      cat("ANOVA p-value:", anova_result[[1]]$`Pr(>F)`[1], "\n")
+    }}}
+pairwise_analysis(capmetro_data)
+
+#*analysis of effects on how many people board the metro:
+#*Extremely strong correlation with day of week and weekend. zero correlation with month.
+#*Little correlation for temperature and how many people get off on each stop. Moderate correlation with hour of day.
+
+#*Glancing observations from plots:
+#*People more likely to board from 1pm-6pm. Before 10am are the emptiest hours
+#*Much less people ride the bus saturday-sunday. Not much difference M-F.
+#*Temperature isn't very important, but it being 70-80 degrees does create a slight uptick in riders
+#* For alighting, we can see that no one gets on in the areas where no one gets off. There are "dead zones".
+
+```
+
+
+```{r }
+
+```
+

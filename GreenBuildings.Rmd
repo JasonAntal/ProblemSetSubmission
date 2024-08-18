@@ -1,0 +1,249 @@
+---
+title: "GreenBuildings"
+author: "Jason Antal"
+date: "2024-08-18"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(e1071)
+setwd("c:/Users/jason/downloads")
+greenbuildings <- read_csv("greenbuildings.csv")
+```
+
+```{r was the analyst justified in removing <10% occupancy buildings?}
+
+# to do:
+#*1: look at <10% occupancy buildings compare with the dataset to see if the 
+#*previous analyst was justified in removing them
+
+low_occupancy = filter(greenbuildings, leasing_rate < 10)
+#print(count(low_occupancy)) 
+#215 buildings fit this criteria, roughly 3% of the dataset
+
+#Compare means for several predictors to see if any pattern stands out. We are using mean and not median here to better understand categorical predictors.
+for (var in c("age", "Rent", "stories", "cluster_rent", 'Gas_Costs', 'size', 
+              'class_b', 'amenities', 'green_rating')) {
+  cat(var, "- Low occupancy buildings:", mean(low_occupancy[[var]]),
+      "All buildings:", mean(greenbuildings[[var]]), "\n")
+}
+
+#ANSWER
+print('The low-occupancy buildings are on average older, lower rent, have significantly less stories, are much smaller, far less likely to have amenities, and nearly all do not have green ratings. However, none of them are extreme outliers to the point we would want to omit them from our analysis. Instead of having "something weird going on", it is more likely that these are simply less desirable buildings that have lower occupancy rates as a result. We will include all buildings in this analysis.')
+
+### claude code is below and contained in this R block
+#
+#
+#
+#
+greenbuildings <- greenbuildings %>%
+  mutate(cluster_factor = as.factor(cluster))
+
+model <- lm(Rent ~ size + age + cluster_rent + green_rating + 
+            cluster_factor, data = greenbuildings)
+
+# Extract the coefficient for green_rating
+green_rating_coef <- coef(model)["green_rating"]
+
+# Calculate the additional rent for green buildings
+additional_rent_per_sqft <- green_rating_coef
+
+# Calculate total additional rent for a 250,000 sqft building
+total_additional_rent <- 250000 * additional_rent_per_sqft
+
+cat("Additional rent for green buildings: $", round(additional_rent_per_sqft, 2), "per square foot per year\n")
+cat("Total additional rent for a 250,000 sqft green building, assuming 100% occupancy: $", round(total_additional_rent, 2), "per year\n")
+
+# Step 3: Calculate the effect of occupancy rate on revenue
+
+# Calculate median occupancy rates for green and non-green buildings
+green_buildings <- filter(greenbuildings, green_rating == 1)
+brown_buildings <- filter(greenbuildings, green_rating == 0)
+
+med_green_occupancy <- median(green_buildings$leasing_rate)
+med_brown_occupancy <- median(brown_buildings$leasing_rate)
+
+cat('Median green building occupancy rate: ', med_green_occupancy, '%\n')
+cat('Median brown building occupancy rate: ', med_brown_occupancy, '%\n')
+
+# Calculate revenue for green and non-green buildings
+green_rent_sqft <- 250000 * (25 + additional_rent_per_sqft)
+brown_rent_sqft <- 250000 * 25
+
+avg_revenue_green <- green_rent_sqft * med_green_occupancy * 0.01
+avg_revenue_brown <- brown_rent_sqft * med_brown_occupancy * 0.01
+
+revenue_diff <- avg_revenue_green - avg_revenue_brown
+
+cat("Estimated annual revenue for green building: $", round(avg_revenue_green, 2), "\n")
+cat("Estimated annual revenue for non-green building: $", round(avg_revenue_brown, 2), "\n")
+cat("Additional annual revenue for green building: $", round(revenue_diff, 2), "\n")
+
+# Step 4: Calculate payback period
+
+green_cost <- 5000000  # extra 5 million cost to get green cert
+payback_period <- green_cost / revenue_diff
+
+cat("Estimated payback period:", round(payback_period, 2), "years\n")
+
+# Step 5: Visualize the relationship between green rating and rent, adjusting for confounding variables
+
+# Create a scatter plot of rent vs. age, colored by green rating
+ggplot(greenbuildings, aes(x = age, y = Rent, color = factor(green_rating))) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values = c("0" = "brown", "1" = "green"), 
+                     labels = c("Non-green", "Green")) +
+  labs(title = "Rent vs. Age of Building",
+       x = "Age (years)",
+       y = "Rent ($ per square foot per year)",
+       color = "Green Rating") +
+  theme_minimal()
+
+# Create a box plot of rent by green rating, faceted by building class
+ggplot(greenbuildings, aes(x = factor(green_rating), y = Rent, fill = factor(green_rating))) +
+  geom_boxplot() +
+  facet_wrap(~ class_a + class_b, labeller = label_both) +
+  scale_fill_manual(values = c("0" = "brown", "1" = "green"),
+                    labels = c("Non-green", "Green")) +
+  labs(title = "Rent Distribution by Green Rating and Building Class",
+       x = "Green Rating",
+       y = "Rent ($ per square foot per year)",
+       fill = "Green Rating")
+
+```
+
+
+
+```{r median/mean rent calculations}
+#*2: look at median and mean rent both. The claim is that median 
+#*green rent is $27.60 and brown rent is $25. Was he justified in using median?
+green_buildings = filter(greenbuildings_data, green_rating == 1)
+brown_buildings = filter(greenbuildings_data, green_rating == 0)
+
+#If the data is highly skewed, median is appropriate. If not, mean is appropriate. Verify here:
+plot_rent_dist <- function(data, title) {
+  ggplot(data, aes(x = Rent)) +
+    geom_histogram(bins = 30, fill = "blue", alpha = 0.7) +
+    geom_vline(aes(xintercept = mean(Rent)), color = "red", linetype = "dashed") +
+    geom_vline(aes(xintercept = median(Rent)), color = "green", linetype = "dashed") +
+    ggtitle(title)
+}
+
+#output plots and skewness metrics
+print(plot_rent_dist(green_buildings, "Green Buildings Rent Distribution"))
+print(plot_rent_dist(brown_buildings, '"Brown" Buildings Rent Distribution'))
+print(plot_rent_dist(greenbuildings_data, 'All Buildings Rent Distribution'))
+
+cat("Skewness for Brown Buildings:", skewness(brown_buildings$Rent), "\n")
+cat("Skewness for Green Buildings:", skewness(green_buildings$Rent), "\n")
+cat("Skewness for All Buildings:", skewness(greenbuildings_data$Rent), "\n")
+
+cat('Median rent for green buildings:', median(green_buildings$Rent), '\n')
+cat('Median rent for brown buildings:', median(brown_buildings$Rent), '\n')
+```
+
+```{r median/mean rent calculations}
+#*3: Calculate occupancy rate's effects on $ per year
+green_rent_sqft = 250000*27.6
+brown_rent_sqft = 250000*25
+print(green_rent_sqft) #green building total rent
+print(brown_rent_sqft) #brown building rent
+cat((green_rent_sqft) - (250000*25))
+#if occupancy rate is 100%, he is correct in saying that it's a 650k profit. Will occupancy be 100%? 
+
+#determine whether to use mean or median for occupancy
+cat("Skewness of Average occupancy for green buildings:", skewness(green_buildings$leasing_rate), "\n")
+cat("Skewness of Average occupancy for brown buildings:", skewness(brown_buildings$leasing_rate), "\n")
+#use median
+
+med_green_occupancy = median(green_buildings$leasing_rate)
+med_brown_occupancy = median(brown_buildings$leasing_rate)
+cat('median green building occupancy rate: ', med_green_occupancy, '%')
+cat('median brown building occupancy rate: ', med_brown_occupancy, '%')
+
+avg_revenue_green = green_rent_sqft * med_green_occupancy *.01
+avg_revenue_brown = brown_rent_sqft * med_brown_occupancy *.01
+
+print(avg_revenue_green)
+print(avg_revenue_brown)
+revenue_diff = avg_revenue_green - avg_revenue_brown
+print(revenue_diff)
+
+#green buildings would actually provide an extra $838,355/yr of revenue on average due to their increased occupancy rates
+```
+
+```{r median/mean rent calculations}
+#*4: How many years until the green investment pays off? (baseline construction cost is $100m, plus 5% extra/5m for green verification) Be sure to factor in occupancy rate. (100% occupancy rate = 7.7 years, 90% = 8.~ years)
+
+green_cost = 5000000 #extra 5 million cost to get green cert
+cat("Payback period, assuming this building will have the median occupancy of 92.9%:", round(green_cost / revenue_diff, 2), "years\n")
+
+```
+
+```{r median/mean rent calculations}
+#*5: Verify no other confounding factors. Will the building last 30 years, energy costs, cluster rent, etc.
+
+#*there are several. The first: our building is 250k sqft, in the top 38%. Why are we comparing ourselves to the bottom 20% of size?
+#*Second, age. Some very old buildings here. Ours will be brand new.
+#*Third, Cluster and cluster_rent. Will where we build affect the payback period equation signficantly?
+#*Fourth, overall desirability; employment growth, amenities, etc. all possibly influence this equation. Without further information, this analysis won't be as accurate.
+#*So, to wrap up? 2 things to do. 1- analyze all of the most impactful variables for rent. 2- analyze specifically size, age, cluster, and cluster_rent and see if you need to refine your methods further. 
+#*
+```
+
+```{r median/mean rent calculations}
+#*6 analyze major confouncing variables like size, age, cluster_rent, and cluster_factor to ensure that green buildings are in fact higher revenue.
+
+library(tidyverse)
+library(broom)
+library(car)
+
+
+greenbuildings <- greenbuildings %>%
+  mutate(cluster_factor = as.factor(cluster))
+
+# Create the regression model
+model <- lm(Rent ~ size + age + cluster_rent + green_rating + 
+            cluster_factor, data = greenbuildings)
+summary(model)
+
+# Create a version of the model without green_rating for comparison
+model_without_green <- lm(Rent ~ size + age + cluster_rent + 
+                          cluster_factor, data = greenbuildings)
+
+# Compare the models
+anova(model_without_green, model)
+#higher f-statistic means that the model is greatly improved by adding green_rating. 
+#p-value confirms that green_rating is extremely like to be producing this effect
+
+summary_model <- summary(model)
+
+# Extract the coefficient for green_rating
+green_rating_coef <- coef(model)["green_rating"]
+
+# Extract the standard error for green_rating
+green_rating_se <- summary_model$coefficients["green_rating", "Std. Error"]
+
+# Calculate the 95% confidence interval
+conf_interval <- confint(model, "green_rating", level=0.95)
+
+# Print results
+cat("Coefficient for green_rating:", round(green_rating_coef, 3), "\n")
+cat("Standard Error:", round(green_rating_se, 3), "\n")
+cat("95% Confidence Interval:", round(conf_interval[1], 3), "to", round(conf_interval[2], 3), "\n")
+
+#coefficient for green_rating = $1.41 more per sq foot, not 2.60
+#standard error means that this $1.41 estimate could vary by 0.41 either way
+#conf interval is that there's a 95% chance of it falling into that range
+
+###NOW WHAT?
+# you now have to go back, replace the median calculation with this, and plug in the proper calculations across the rest of your code.
+#Once this is done, you can then figure out how to further improve the accuracy of your model. Is it in fact $1.41? What if you added other variables or used other methods?
+#Finally, plot and tell a story.
+```
+
