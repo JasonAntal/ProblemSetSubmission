@@ -2,10 +2,10 @@
 title: "AssociationRule"
 author: "Jason Antal"
 date: "2024-08-18"
-output: pdf_document
+output: html_document
 ---
 
-```{r setup, include=FALSE #CHANGE FILEPATH AND RUN THIS BEFORE RUNNING BELOW}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(ggplot2)
@@ -15,7 +15,6 @@ library(arulesViz)
 library(tidyverse)
 setwd("C:/Users/jason/downloads") #CHANGE FILEPATH HERE
 groceries <- read.transactions("groceries.txt", format = "basket", sep = ",")
-grocery_data <- readLines("groceries.txt")
 
 ```
 
@@ -27,7 +26,17 @@ Notes:
     The data file is a list of baskets: one row per basket, with multiple items per row separated by commas. You'll have to cobble together your own code for processing this into the format expected by the "arules" package. This is not intrinsically all that hard, but it is the kind of data-wrangling wrinkle you'll encounter frequently on real problems, where your software package expects data in one format and the data comes in a different format. Figuring out how to bridge that gap is part of the assignment, and so we won't be giving tips on this front.
 
 
-```{r }
+```{r}
+
+print("In order to handle this data correctly, we will use the read.transactions method
+      with format set to basket and separation set to a comma.")
+setwd("C:/Users/jason/downloads")
+groceries <- read.transactions("groceries.txt", format = "basket", sep = ",")
+
+print("We'll mine frequent datasets using the apriori() method. I chose a support
+of 0.005 to focus on items that appear in at least 0.5% of transactions, confidence 
+of 0.3 to ensure a reasonable strength of association, and a lift greater than 
+3 to identify rules where items appear together often enough to rule out random luck.")
 
 rules <- apriori(groceries, 
                  parameter = list(support = 0.005, confidence = 0.3, minlen = 2),
@@ -46,17 +55,18 @@ inspect(head(rules, 10))
 top_20_rules <- head(rules, 20)
 plot(top_20_rules, method = "graph", engine = "htmlwidget")
 
+cat("The top rules show strong associations between various types of vegetables and fruits. 
+    For example, rule 1 suggests that customers who buy root vegetables are likely to also buy other vegetables.
+    This makes sense as people buying fresh produce often buy a variety of items for meal preparation.")
+
 # Create a scatter plot of support vs confidence
 plot(rules, measure = c("support", "confidence"), shading = "lift")
 
 # Create a parallel coordinates plot
 plot(top_20_rules, method = "paracoord")
 
-# Create a custom ggplot visualization
-top_10_rules <- head(rules, 10)
-plot_data <- DATAFRAME(top_10_rules)
-
-ggplot(plot_data, aes(x = LHS, y = RHS)) +
+#Plot data by lift
+ggplot(DATAFRAME(head(rules, 10)), aes(x = LHS, y = RHS)) +
   geom_tile(aes(fill = lift), color = "white") +
   geom_text(aes(label = round(lift, 2)), vjust = 1) +
   scale_fill_gradient(low = "yellow", high = "red") +
@@ -66,11 +76,10 @@ ggplot(plot_data, aes(x = LHS, y = RHS)) +
        x = "Left Hand Side", y = "Right Hand Side",
        fill = "Lift")
 
-```
-
-
-
-```{r }
+cat("The heatmap visualizes the strength of association (lift) between different item pairs.
+    Darker colors indicate stronger associations. We can see that certain vegetable combinations
+    have particularly high lift values, suggesting they are often purchased together.")
 
 ```
+
 
