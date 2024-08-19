@@ -17,6 +17,7 @@ Hello! The scripts I used to answer to each problem are below their problems' re
 
 # Visual story telling part 2: Capital Metro data
 [Capital Metro](<https://github.com/JasonAntal/ProblemSetSubmission/blob/main/CapitalMetro.Rmd>) 
+[Pdf version](<https://github.com/JasonAntal/ProblemSetSubmission/blob/main/CapitalMetro.pdf>)
 
 # Clustering and dimensionality reduction
 [Clustering and Dimensionality](<https://github.com/JasonAntal/ProblemSetSubmission/blob/main/ClusteringAndDimensionality.Rmd>) 
@@ -24,6 +25,7 @@ Hello! The scripts I used to answer to each problem are below their problems' re
 
 # Market segmentation
 [Market Segmentation](<https://github.com/JasonAntal/ProblemSetSubmission/blob/main/MarketSegmentation.Rmd>) 
+[Pdf version](<https://github.com/JasonAntal/ProblemSetSubmission/blob/main/MarketSegmentation.pdf>)
 
 # The Reuters corpus
 This will be submitted on 8/19 for partial credit.
@@ -31,6 +33,7 @@ This will be submitted on 8/19 for partial credit.
 
 # Association rule mining
 [Association Rule](<https://github.com/JasonAntal/ProblemSetSubmission/blob/main/AssociationRule.Rmd>) 
+[HTML version](<https://github.com/JasonAntal/ProblemSetSubmission/blob/main/AssociationRule.html>)
 
 # Image classification with neural networks
 [Image Classification](<https://github.com/JasonAntal/ProblemSetSubmission/blob/main/ImageClassification.ipynb>) 
