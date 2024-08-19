@@ -1,4 +1,4 @@
-# ProblemSetSubmission
+# Problem Set Submissions
 STA380 Problem Set, part 2
 
 Hello! The scripts I used to answer to each problem are below their problems' respective names, along with their pdf or html version, if they were written in .rmd. 
