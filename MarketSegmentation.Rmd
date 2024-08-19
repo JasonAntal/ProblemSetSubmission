@@ -1,11 +1,11 @@
 ---
-title: "MarketSegmentation"
+title: "Market Segmentation"
 author: "Jason Antal"
 date: "2024-08-18"
 output: pdf_document
 ---
 
-```{r setup, include=FALSE #CHANGE FILEPATH AND RUN THIS BEFORE RUNNING BELOW}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(ggplot2)
@@ -26,39 +26,45 @@ Each row of social_marketing.csv represents one user, labeled by a random (anony
 Your task to is analyze this data as you see fit, and to prepare a concise report for NutrientH20 that identifies any interesting market segments that appear to stand out in their social-media audience. You have complete freedom in deciding how to pre-process the data and how to define "market segment." (Is it a group of correlated interests? A cluster? A latent factor? Etc.) Just use the data to come up with some interesting, well-supported insights about the audience, and be clear about what you did.
 
 ```{r }
+cat("Let's start off our analysis by simply looking at the most popular topics,
+    so that NutrientH20 has a better idea of where to focus its marketing efforts.
+    To accomplish this, we will remove all spam and adult tweets, then sort in
+    descending order.")
+
+#Prepare data
 names(data)[1] <- "annotator"
 data$annotator <- 1:nrow(data)
 
 data_clean <- data %>% 
   select(-spam, -adult, -annotator)
-
-# Normalize the data
 data_normalized <- scale(data_clean)
 
 #identify most popular interest categories:
 category_sums <- colSums(data_clean)
 top_categories <- sort(category_sums, decreasing = TRUE)[1:10]
-barplot(top_categories, las = 2, main = "Top 10 Most Popular Categories")
 
-#correlation analysis
-category_sums <- colSums(data_clean)
-top_categories <- sort(category_sums, decreasing = TRUE)[1:10]
-barplot(top_categories, las = 2, main = "Top 10 Most Popular Categories")
+par(mar = c(10, 5, 4, 2) + 0.1, cex = 0.8)  # Increase bottom margin for labels
+barplot(top_categories, 
+        las = 2, 
+        main = "Top 10 Most Popular Categories",
+        ylab = "Tweets",
+        xlab = "Categories", 
+        cex.names = 0.7)
 
-###K-means to identify market segments
-# Determine optimal number of clusters
-wss <- (nrow(data_normalized)-1)*sum(apply(data_normalized,2,var))
-for (i in 2:15) wss[i] <- sum(kmeans(data_normalized, centers=i)$withinss)
-plot(1:15, wss, type="b", xlab="Number of Clusters", ylab="Within groups sum of squares")
+cat('These are the most popular topics of discussion on Twitter. From this, we 
+    can see that food, photo sharing, and "chatter" (which could simply mean funny 
+    or engaging everyday interactions) would have the widest audiences. If NutrientH20
+    wants to reach its largest audience possible, it should take care not to neglect
+    those topics when communicating to its audience.')
 
-# Perform k-means clustering
-set.seed(123)
+cat("It's often a good idea to focus on a few specific audiences. We will use k-means
+    to create 5 clusters, then calculate the mean values of each interest category 
+    for each cluster. The idea is to see what the most common interests are per
+    cluster, so we can better identify each market segment.")
+# Perform k-means clustering to analyze data
+set.seed(15)
 km <- kmeans(data_normalized, centers = 5, nstart = 25)
 
-# Visualize the clusters
-fviz_cluster(km, data = data_normalized, geom = "point", stand = FALSE, main = "K-means Clustering")
-
-###Analyze
 # Calculate mean values for each cluster
 cluster_means <- aggregate(data_clean, by=list(cluster=km$cluster), mean)
 cluster_means_long <- gather(cluster_means, key="category", value="mean", -cluster)
@@ -75,24 +81,17 @@ ggplot(top_interests, aes(x=reorder(category, mean), y=mean, fill=factor(cluster
   coord_flip() +
   labs(x="Category", y="Mean", title="Top 5 Interests by Cluster")
 
+cat("We've identied 3 distinct market segments NutrientH20 should consider targeting:
+1) Health and Fitness Enthusiasts: This segment shows high interest in nutrition, 
+fitness, and outdoors activities. They are likely to be receptive to messages about 
+the health benefits of NutrientH20.
+2) Global citizens: This segment is interested in travel, current events, and
+politics. They might respond well to campaigns that highlight NutrientH20's 
+social responsibility initiatives around the world.
+3) Visual engagers: This segment is interested in sharing photos, fashion,
+and is also the most interested in random chatter. They would be most likely to 
+respond well to influencer parternships, memes, or visually appealing ad campaigns.")
+
 ```
 
-
-```{r pressure, echo=FALSE}
-Based on our analysis, we can identify five distinct market segments in NutrientH20's Twitter audience:
-
-Health and Fitness Enthusiasts: This segment shows high interest in personal fitness, health nutrition, and outdoors activities. They are likely to be receptive to messages about the health benefits of NutrientH20.
-Tech-Savvy Professionals: Characterized by interests in technology, computers, and business. Marketing to this segment could focus on how NutrientH20 fits into a busy, modern lifestyle.
-Entertainment Seekers: This group shows high engagement with TV, film, music, and online gaming. NutrientH20 could consider partnerships with entertainment brands or sponsorships of events.
-Family-Oriented Consumers: Interests include parenting, family, and home and garden. Marketing messages for this segment could emphasize how NutrientH20 is great for the whole family.
-Social and Political Engagers: This segment is interested in current events, news, and politics. They might respond well to campaigns that highlight NutrientH20's social responsibility initiatives.
-
-Recommendations:
-
-Tailor messaging and content to these specific segments on Twitter.
-Develop targeted advertising campaigns that align with the interests of each segment.
-Consider collaborations or partnerships that would appeal to specific segments (e.g., fitness influencers for the Health and Fitness Enthusiasts).
-Create diverse content that caters to the different interests within your audience.
-Monitor these segments over time to track changes in interests and engagement.
-```
 
