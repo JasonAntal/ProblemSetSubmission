@@ -1,15 +1,17 @@
 ---
-title: "CapitalMetro"
+title: "Capital Metro"
 author: "Jason Antal"
 date: "2024-08-18"
 output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(ggplot2)
 library(readr)
+library(lubridate)
+library(gridExtra)
+library(viridis)
 setwd("c:/Users/jason/downloads")
 capmetro_data <- read_csv("capmetro_UT.csv")
 ```
@@ -28,10 +30,13 @@ Your task is to create a figure, or set of related figures, that tell an interes
 
 You have broad freedom to look at any variables you'd like here -- try to find that sweet spot where you're showing genuinely interesting relationships among more than just two variables, but where the resulting figure or set of figures doesn't become overwhelming/confusing. (Faceting/panel plots might be especially useful here.)
 
-```{r pairwise analysis of all data to see relationships}
+```{r}
+cat("Let's analyze all chronological data related to UT austin metro ridership
+    to see what the busiest hours are.")
 
+#pairwise analysis of all day-related data to see each chronological relationship
 pairwise_analysis <- function(data) {
-  variables <- c("alighting", "temperature", "hour_of_day", "day_of_week", "weekend", "month")
+  variables <- c("hour_of_day", "day_of_week", "weekend")
   
   # Loop through each variable
   for (var in variables) {
@@ -44,7 +49,7 @@ pairwise_analysis <- function(data) {
       plot(data[[var]], data$boarding, 
            main = paste("Boarding vs", var),
            xlab = var, ylab = "Boarding",
-           pch = 20, col = "blue")
+           pch = 20, col = "steelblue")
     } else {
       # For categorical variables, create a boxplot
       boxplot(boarding ~ data[[var]], data = data,
@@ -57,20 +62,35 @@ pairwise_analysis <- function(data) {
     }}}
 pairwise_analysis(capmetro_data)
 
-#*analysis of effects on how many people board the metro:
-#*Extremely strong correlation with day of week and weekend. zero correlation with month.
-#*Little correlation for temperature and how many people get off on each stop. Moderate correlation with hour of day.
+cat("We can see a pretty clear relationship between what day and hour it is and
+    how many people board. Now let's get rid of the weekend data and combine the 
+    days and hours data to see what the busiest boarding times all week are.")
 
-#*Glancing observations from plots:
-#*People more likely to board from 1pm-6pm. Before 10am are the emptiest hours
-#*Much less people ride the bus saturday-sunday. Not much difference M-F.
-#*Temperature isn't very important, but it being 70-80 degrees does create a slight uptick in riders
-#* For alighting, we can see that no one gets on in the areas where no one gets off. There are "dead zones".
-
-```
-
-
-```{r }
+# Create hour bins
+capmetro_data <- capmetro_data %>%
+  mutate(hour_bin = cut(hour_of_day, 
+                        breaks = seq(0, 24, by = 3),
+                        labels = c("12AM-3AM", "3AM-6AM", "6AM-9AM", "9AM-12PM", 
+                                   "12PM-3PM", "3PM-6PM", "6PM-9PM", "9PM-12AM")))
 
 ```
+``` {r}
 
+#plot data
+capmetro_data %>%
+  group_by(day_of_week, hour_bin) %>%
+  summarise(avg_boarding = mean(boarding), .groups = "drop") %>%
+  ggplot(aes(x = hour_bin, y = avg_boarding, color = day_of_week, group = day_of_week)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  scale_color_brewer(palette = "Set1") +
+  labs(title = "Busiest Metro Hours for UT Austin",
+       x = "Hour of Day", 
+       y = "Average Boarding Passengers",
+       color = "Day of Week")
+
+cat("From this chart, we can see that the busiest hours are from 3-6pm on Monday 
+    and Tuesday, with the number of people gradually dropping off the later you
+    get into the week. Very few people ride on the weekends, to the point that 
+    more people ride the bus from 6-9am on Friday than 3-6pm on Sunday.")
+```
