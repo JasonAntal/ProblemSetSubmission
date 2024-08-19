@@ -1,7 +1,7 @@
 # ProblemSetSubmission
 STA380 Problem Set, part 2
 
-The .rmd or .ipynb scripts I used to answer to each respective problem are below their problems' names. Below each script is the link to its' location in my repository. I've also knitted a .pdf file compiling answers from the first 8 problems into one document.
+Hello! The scripts I used to answer to each problem are below their problems' respective names, along with their pdf version, if they were written in .rmd. 
 
 # Probability practice
 [Probability Practice](<https://github.com/JasonAntal/ProblemSetSubmission/blob/main/MarketSegmentation.Rmd>) 
