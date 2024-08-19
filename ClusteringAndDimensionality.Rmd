@@ -31,6 +31,10 @@ wine_data$color <- as.factor(wine_data$color)
 wine_features <- wine_data %>% select(-color, -quality)
 wine_labels <- wine_data %>% select(color, quality)
 
+cat("We're using PCA with scaling to account for different units of measurement 
+    in the chemical properties. We're focusing on the first two principal 
+    components for visualization purposes.", "\n")
+
 # Perform PCA
 pca_result <- prcomp(wine_features, scale. = TRUE)
 pca_df <- as.data.frame(pca_result$x[, 1:2])
@@ -52,7 +56,7 @@ ggplot(pca_df, aes(x = PC1, y = PC2, color = quality)) +
 
 
 
-```{r results = 'hide'}
+```{r}
 wine_data_unique <- unique(wine_data) #TSNE throws error if it sees duplicates
 wine_features_unique <- wine_data_unique %>% select(-color, -quality)
 
@@ -67,6 +71,9 @@ wine_data_unique$id <- NULL
 
 set.seed(2)
 tsne_result <- Rtsne(wine_features_unique, dims = 2, perplexity = 30, verbose = TRUE, max_iter = 200)
+
+cat("We're using tSNE with 2 dimensions for easy visualization. Perplexity 
+    30 is chosen as a balance between local and global structure preservation.", "\n")
 
 tsne_df <- data.frame(
   tSNE1 = tsne_result$Y[,1],

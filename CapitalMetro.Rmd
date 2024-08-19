@@ -32,7 +32,8 @@ You have broad freedom to look at any variables you'd like here -- try to find t
 
 ```{r}
 cat("Let's analyze all chronological data related to UT austin metro ridership
-    to see what the busiest hours are.")
+    to see what the busiest hours are. For this, we will use simple pairwise
+    plotting and then perform ANOVA to determine if the relationship is signficant.")
 
 #pairwise analysis of all day-related data to see each chronological relationship
 pairwise_analysis <- function(data) {
