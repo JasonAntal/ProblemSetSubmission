@@ -5,16 +5,13 @@ date: "2024-08-18"
 output: pdf_document
 ---
 
-```{r setup\, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-
+```{r setup, include=FALSE}
 ```
 
 QUESTION:
 Part A. Visitors to your website are asked to answer a single survey question before they get access to the content on the page. Among all of the users, there are two categories: Random Clicker (RC), and Truthful Clicker (TC). There are two possible answers to the survey: yes and no. Random clickers would click either one with equal probability. You are also giving the information that the expected fraction of random clickers is 0.3. After a trial period, you get the following survey results: 65% said Yes and 35% said No. What fraction of people who are truthful clickers answered yes? Hint: use the rule of total probability.
-https://en.wikipedia.org/wiki/Law_of_total_probability 
 
-```{r Part A, include=FALSE}
+```{r}
 knitr::opts_chunk$set(echo = TRUE)
 
 p_rc <- 0.3  # Probability of being a Random Clicker
@@ -24,8 +21,7 @@ p_yes_rc <- 0.5  # Random Clickers have 50% chance of answering Yes
 p_yes_tc <- (p_yes - p_yes_rc * p_rc) / (1 - p_rc)
 
 #ANSWER:
-cat("The percent of Truthful Clickers who answered Yes is:", round(p_yes_tc,4)*100, "%.", '\n')
-cat("As a fraction, this means roughly 7/10 of truthful clickers answered yes.")
+cat("The percent of Truthful Clickers who answered Yes is:", round(p_yes_tc,4)*100, "%.", '\n',"As a fraction, this means roughly 7/10 of truthful clickers answered yes.")
 
 ```
 
@@ -38,7 +34,7 @@ Part B. Imagine a medical test for a disease with the following two attributes:
 
 Suppose someone tests positive. What is the probability that they have the disease?
 
-```{r Part B}
+```{r}
 sensitivity <- 0.993  # P(Positive | Disease)
 specificity <- 0.9999  # P(Negative | No Disease)
 prevalence <- 0.000025  # P(Disease)
