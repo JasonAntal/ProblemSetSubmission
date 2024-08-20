@@ -1,0 +1,151 @@
+---
+title: "Reuters Corpus"
+author: "Jason Antal"
+date: "2024-08-19"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(tm)
+library(wordcloud)
+library(topicmodels)
+library(syuzhet)
+
+get_all_txt_files <- function(dir_path) {
+  files <- list.files(path = dir_path, 
+                      pattern = "\\.txt$", 
+                      full.names = TRUE, 
+                      recursive = TRUE)
+  return(files)}
+train_file_list <- get_all_txt_files("C:/Users/jason/downloads/C50train")
+
+```
+
+Revisit the Reuters C50 text corpus that we briefly explored in class. Your task is simple: tell an interesting story, anchored in some analytical tools we have learned in this class, using this data. For example:
+
+    you could cluster authors or documents and tell a story about what you find.
+    you could look for common factors using PCA.
+    you could train a predictive model and assess its accuracy, constructing features for each document that maximize performance.
+    you could do anything else that strikes you as interesting with this data.
+
+Describe clearly what question you are trying to answer, what models you are using, how you pre-processed the data, and so forth. Make sure you include at least one really interesting plot (although more than one might be necessary, depending on your question and approach.)
+
+Format your write-up in the following sections, some of which might be quite short:
+
+    Question: What question(s) are you trying to answer?
+    Approach: What approach/statistical tool did you use to answer the questions?
+    Results: What evidence/results did your approach provide to answer the questions? (E.g. any numbers, tables, figures as appropriate.)
+    Conclusion: What are your conclusions about your questions? Provide a written interpretation of your results, understandable to stakeholders who might plausibly take an interest in this data set.
+
+Regarding the data itself: In the C50train directory, you have 50 articles from each of 50 different authors (one author per directory). Then in the C50test directory, you have another 50 articles from each of those same 50 authors (again, one author per directory). This train/test split is obviously intended for building predictive models, but to repeat, you need not do that on this problem. You can tell any story you want using any methods you want. Just make it compelling!
+
+Note: if you try to build a predictive model, you will need to figure out a way to deal with words in the test set that you never saw in the training set. This is a nontrivial aspect of the modeling exercise. (E.g. you might simply ignore those new words.)
+
+This question will be graded according to three criteria:
+
+    the overall "interesting-ness" of your question and analysis.
+    the clarity of your description. We will be asking ourselves: could your analysis be reproduced by a competent data scientist based on what you've said? (That's good.) Or would that person have to wade into the code in order to understand what, precisely, you've done? (That's bad.)
+    technical correctness (i.e. did you make any mistakes in execution or interpretation?)
+
+```{r}
+cat('Our question for this analysis is: Are Reuters stories more positive in tone,
+negative, or neutral?')
+
+cat('To start, we will extract all content in our folder of 2500 stories 
+      using the PlainTextDocument() function.')
+
+extract_content <- function(fname) {
+  tryCatch({
+    content <- readLines(fname, warn = FALSE, encoding = "UTF-8")
+    content <- paste(content, collapse = "\n")
+    
+    return(PlainTextDocument(
+      x = content,
+      id = fname,
+      language = 'en'
+    ))})}
+
+# Read all files and extract content 
+processed_files <- lapply(seq_along(train_file_list), function(i) {
+  if (i %% 100 == 0)
+  extract_content(train_file_list[i])
+})
+
+cat('We will now preprocess the data by getting rid of uninformative words like
+"the", "and", and "character". We will also remove any tags in the files such as 
+"datetimestamp". Once we have done this, we will use several built-in functions to
+clean the text, such as lowercasing and stripping white space.')
+
+extended_stopwords <- c(stopwords("english"), "and", "the", "for", "that", "with", "was", "said", "from", "its",
+                        "will", "also", "to", "it", "there", "is", "my", "can", "I", "this", "a", "of", "I'm", 
+                        "character", "billion", "gmt", "hour", "mday", "wday", "yday", "one", "last", "two", 
+                        "first", "group", "years", "analyst", "listsec", "told", "may", "mon", "percent", "million",
+                        "government", "told", "heading", "zone", "origin", "description", 'null', 'year',
+                        "datetimestamp", "gmtoff", "isdst", "listcontent", "meta", "listauthor")
+
+corpus <- Corpus(VectorSource(processed_files))
+
+# Preprocess the text
+corpus <- corpus %>%
+  tm_map(content_transformer(tolower)) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(removeNumbers) %>%
+  tm_map(removeWords, extended_stopwords) %>%
+  tm_map(stripWhitespace)
+
+# Create a document-term matrix
+dtm <- DocumentTermMatrix(corpus)
+
+cat('We now calculate the most frequent terms and output them in a wordcloud.')
+
+# Calculate term frequencies
+term_freq <- colSums(as.matrix(dtm))
+
+# Get the most common terms
+top_25_terms <- sort(term_freq, decreasing = TRUE)[1:25]
+cat("Top 25 most common terms:")
+print(top_25_terms)
+
+wordcloud(names(term_freq), term_freq, max.words = 25, colors = brewer.pal(8, "Dark2"))
+cat('We can see that the most common terms are generally focused on financial
+      markets and trade, and not particularly positive or negative. This was interesting,
+      but it does not answer our original question. So to understand
+      which way Reuters leans in terms of tone, we will perform a sentiment analysis.')
+
+analyze_sentiment <- function(doc) {
+  text <- as.character(doc)
+  sentiment <- get_sentiment(text, method="bing")
+  return(sum(sentiment))
+}
+
+# Perform sentiment analysis on all documents
+sentiment_scores <- sapply(corpus, analyze_sentiment)
+overall_sentiment <- mean(sentiment_scores)
+
+# Print results
+cat("Overall sentiment score:", overall_sentiment, "\n")
+print(table(sentiment_scores))
+hist(sentiment_scores, main="Distribution of Sentiment Scores", 
+     xlab="Sentiment Score", ylab="Frequency", breaks=20, col = "steelblue")
+
+cat("This barchart is not an error; when we break down the results, we can
+      see that 2,477 articles were ranked as more or less neutral in tone. It seems
+      the people at Reuters are doing a good job at being impartial in their writing.")
+
+cat("For the sake of answering our original question of whether or not
+      Reuters stories trend negative or positive, let's repeat the process
+      with all neutral scores removed.")
+
+sentiment_scores2 <- sentiment_scores[sentiment_scores != 0]
+
+hist(sentiment_scores2, main="Distribution of Sentiment Scores", 
+     xlab="Sentiment Score", ylab="Frequency", breaks=20, col = "steelblue")
+abline(v=median(sentiment_scores2), col="orange", lwd=2, lty=2)
+abline(v=mean(sentiment_scores2), col="red", lwd=2, lty=2)
+legend("topright", legend=c("Median", "Mean"), col=c("orange", "red"), lty=2, lwd=2)
+
+cat("From this graph, we can see that the few Reuters stories that are distinctly
+      positive or negative tend to trend positive.")
+```
