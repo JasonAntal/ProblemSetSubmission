@@ -28,8 +28,9 @@ Hello! The scripts I used to answer to each problem are below their problems' re
 [Pdf version](<https://github.com/JasonAntal/ProblemSetSubmission/blob/main/MarketSegmentation.pdf>)
 
 # The Reuters corpus
-This will be submitted on 8/19 for partial credit.
-[Reuters Corpus](<https://github.com/JasonAntal/ProblemSetSubmission/blob/main/Reuters.Rmd123>) 
+This one was submitted on 8/19 for partial credit.
+[Reuters Corpus](<https://github.com/JasonAntal/ProblemSetSubmission/blob/main/ReutersCorpus.Rmd>) 
+[Reuters Corpus](<https://github.com/JasonAntal/ProblemSetSubmission/blob/main/ReutersCorpus.pdf>) 
 
 # Association rule mining
 [Association Rule](<https://github.com/JasonAntal/ProblemSetSubmission/blob/main/AssociationRule.Rmd>) 
