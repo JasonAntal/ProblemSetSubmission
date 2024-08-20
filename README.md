@@ -30,7 +30,7 @@ Hello! The scripts I used to answer to each problem are below their problems' re
 # The Reuters corpus
 This one was submitted on 8/19 for partial credit.
 [Reuters Corpus](<https://github.com/JasonAntal/ProblemSetSubmission/blob/main/ReutersCorpus.Rmd>) 
-[Reuters Corpus](<https://github.com/JasonAntal/ProblemSetSubmission/blob/main/ReutersCorpus.pdf>) 
+[Pdf version](<https://github.com/JasonAntal/ProblemSetSubmission/blob/main/ReutersCorpus.pdf>) 
 
 # Association rule mining
 [Association Rule](<https://github.com/JasonAntal/ProblemSetSubmission/blob/main/AssociationRule.Rmd>) 
